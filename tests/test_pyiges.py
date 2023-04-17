@@ -1,6 +1,6 @@
-import numpy as np
+import os
 import pytest
-
+import numpy as np
 import pyiges
 from pyiges import examples
 
@@ -13,6 +13,11 @@ def sample():
 @pytest.fixture(scope='module')
 def impeller():
     return pyiges.read(examples.impeller)
+
+
+@pytest.fixture(scope='module')
+def example_arc():
+    return pyiges.read(os.path.join('./tests/reference_data/example-arcs.iges'))
 
 
 @pytest.fixture(scope='module')
@@ -531,10 +536,35 @@ def test_transformation_parse(trafo):
     assert repr(trafo)
     assert str(trafo)
 
+
 def test_transformation_vtk(trafo):
     trafo = trafo._to_vtk()
     m = trafo.GetMatrix()
     assert m.GetElement(2,3) == pytest.approx(5.67397368511119)
+
+
+def test_conic_arc_parse(example_arc):
+    carc0 = example_arc.conic_arcs()[0]
+    assert carc0.d == {
+        'entity_type_number': 104,
+        'parameter_pointer': 53,
+        'structure': 0,
+        'line_font_pattern': 0,
+        'level': 0,
+        'view': 0,
+        'transform': 11,
+        'label_assoc': 0,
+        'status_number': 20000,
+        'line_weight_number': 0,
+        'color_number': 0,
+        'param_line_count': 2,
+        'form_number': 1,
+        'entity_label': '',
+        'entity_subs_num': 0,
+    }
+    assert carc0.sequence_number == 9
+    assert carc0.parameters == []
+
 
 def test_to_vtk(impeller):
     lines = impeller.to_vtk(lines=True, bsplines=False, surfaces=False)
